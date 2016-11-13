@@ -1,6 +1,6 @@
 {
   "name": "rhs-schedulejs",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "A NPM package for parsing a school schedule.",
   "main": "index.js",
   "scripts": {

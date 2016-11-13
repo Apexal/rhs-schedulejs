@@ -38,26 +38,11 @@ function parse(content) {
         classDays[letter] = [];
         
         // AM Advisement is not included in the download
-        classDays[letter].push({
-            title: 'Morning Advisement',
-            shortTitle: 'AM Advisement',
-            startTime: '08:40 AM',
-            endTime: '08:50 AM',
-            location: 'Homeroom',
-            duration: 10
-        });
-
+        classDays[letter].push(Period('Morning Advisement', 'AM Advisement', '08:40 AM', '08:50 AM', 'Homeroom'));
 
         // For some reason Assembly is left out of the schedule download
         if (letter == 'A') {
-            classDays[letter].push({
-                title: 'Assembly',
-                shortTitle: 'Assembly',
-                startTime: '08:50 AM',
-                endTime: '09:50 AM',
-                location: 'Assembly',
-                duration: 60
-            });
+            classDays[letter].push(Period('Assembly', 'Assembly', '08:50 AM', '09:50 AM', 'Assembly'));
         }
 
         // Get all period lines for this schedule day
@@ -67,49 +52,18 @@ function parse(content) {
         for (var i in lines) {
             const values = lines[i];
             if (lastEndTime != values[1]) {
-                classDays[letter].push({
-                    title: 'Unstructured Time',
-                    shortTitle: 'Free',
-                    startTime: lastEndTime,
-                    endTime:  values[1],
-                    location: 'Anywhere',
-                    duration:  moment.duration(moment(values[1], TIME_FORMAT).diff(moment(lastEndTime, TIME_FORMAT))).asMinutes()
-                });
+                classDays[letter].push(Period('Unstructured Time', 'Free', lastEndTime, values[1], 'Anywhere'));
             }
-
-            classDays[letter].push({
-                title: values[3],
-                shortTitle: values[3].split(' (')[0],
-                startTime: values[1],
-                endTime:  values[2],
-                location: values[4],
-                duration:  moment.duration(moment(values[2], TIME_FORMAT).diff(moment(values[1], TIME_FORMAT))).asMinutes()
-            });
+            classDays[letter].push(Period(values[3], values[3].split(' (')[0], values[1], values[2], values[4]));
 
             lastEndTime = values[2];
         }
 
         // Check for end of day free
-        if (lastEndTime != '02:50 PM') {
-            classDays[letter].push({
-                title: 'Unstructured Time',
-                shortTitle: 'Free',
-                startTime: lastEndTime,
-                endTime:  '02:50 PM',
-                location: 'Anywhere',
-                duration:  moment.duration(moment('02:50 PM', TIME_FORMAT).diff(moment(lastEndTime, TIME_FORMAT))).asMinutes()
-            });
-        }
+        if (lastEndTime != '02:50 PM') classDays[letter].push(Period('Unstructured Time', 'Free', lastEndTime, '02:50 PM', 'Anywhere'));
 
         // PM Advisement is not included in the download
-        classDays[letter].push({
-            title: 'Afternoon Advisement',
-            shortTitle: 'PM Advisement',
-            startTime: '02:50 PM',
-            endTime: '03:00 PM',
-            location: 'Homeroom',
-            duration: 10
-        });
+        classDays[letter].push(Period('Afternoon Advisement', 'PM Advisement', '02:50 PM', '03:00 PM', 'Homeroom'));
 
         handledDays.push(letter);
     }
@@ -117,6 +71,28 @@ function parse(content) {
     return { scheduleDays: scheduleDays, classDays: classDays };
 };
 
-module.exports = {
-    parse: parse
+function Period(title, shortTitle, startTime, endTime, location) {
+    return {
+        title: title,
+        shortTitle: shortTitle,
+        startTime: startTime,
+        endTime: endTime,
+        location: location,
+        duration: moment.duration(moment(endTime, TIME_FORMAT).diff(moment(startTime, TIME_FORMAT))).asMinutes()
+    };
+}
+
+module.exports = (content) => {
+    const parsed = parse(content);
+    
+    function getScheduleDay(d) {
+        const date = moment(d).toDate();
+        return parsed.scheduleDays[date];
+    }
+
+    return {
+        scheduleDays: parsed.scheduleDays,
+        classDays: parsed.classDays,
+        getScheduleDay: getScheduleDay
+    };
 }
