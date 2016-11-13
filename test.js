@@ -12,7 +12,7 @@ fs.readFile(process.argv[2], 'utf8', function (err,data) {
   for (var letter in d.classDays) {
       console.log(letter);
       for (var i in d.classDays[letter]) {
-          console.log(d.classDays[letter][i].shortTitle);
+          console.log(d.classDays[letter][i].startTime + " - " + d.classDays[letter][i].endTime + " | " + d.classDays[letter][i].shortTitle);
       }
   }
 });

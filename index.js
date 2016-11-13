@@ -63,8 +63,19 @@ function parse(content) {
         // Get all period lines for this schedule day
         const lines = periodValues.filter((values) => { return values[0] == moment(date).format(DATE_FORMAT); });
         
+        let lastEndTime = classDays[letter][classDays[letter].length - 1].endTime;
         for (var i in lines) {
             const values = lines[i];
+            if (lastEndTime != values[1]) {
+                classDays[letter].push({
+                    title: 'Unstructured Time',
+                    shortTitle: 'Free',
+                    startTime: lastEndTime,
+                    endTime:  values[1],
+                    location: 'Anywhere',
+                    duration:  moment.duration(moment(values[1], TIME_FORMAT).diff(moment(lastEndTime, TIME_FORMAT))).asMinutes()
+                });
+            }
 
             classDays[letter].push({
                 title: values[3],
@@ -73,6 +84,20 @@ function parse(content) {
                 endTime:  values[2],
                 location: values[4],
                 duration:  moment.duration(moment(values[2], TIME_FORMAT).diff(moment(values[1], TIME_FORMAT))).asMinutes()
+            });
+
+            lastEndTime = values[2];
+        }
+
+        // Check for end of day free
+        if (lastEndTime != '02:50 PM') {
+            classDays[letter].push({
+                title: 'Unstructured Time',
+                shortTitle: 'Free',
+                startTime: lastEndTime,
+                endTime:  '02:50 PM',
+                location: 'Anywhere',
+                duration:  moment.duration(moment('02:50 PM', TIME_FORMAT).diff(moment(lastEndTime, TIME_FORMAT))).asMinutes()
             });
         }
 
